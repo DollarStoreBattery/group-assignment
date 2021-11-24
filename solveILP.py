@@ -118,7 +118,7 @@ class SolveILP(object):
 
 
             # based off the LP relaxation,
-            # decide where to branch off depending on which value is higher and also whether it was feasible
+            # decide where to branch off depending on which upper bound is higher and also whether it was feasible
             # the .success flag tells you if it was feasible
 
             if left_optimization.success and right_optimization.success:
