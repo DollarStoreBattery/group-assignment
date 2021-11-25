@@ -28,7 +28,7 @@ class SolveILP(object):
         if self.isMaximization:
             # multiply all values by negative -1 to switch to a maximization
             c = [i * -1 for i in self.fn_coeffs]       
-        return linprog(c=c, bounds=self.bounds, A_ub=constraint_coeffs,b_ub=constraints)
+        return linprog(c=c, bounds=self.bounds, A_ub=constraint_coeffs,b_ub=constraints,method='revised simplex')
 
     def find_branching_variable(self,design_vector):
         # need to select the design variable with the highest number after the first decimal point
@@ -56,7 +56,7 @@ class SolveILP(object):
         design_variables = relaxed_solution.x 
         function_value = -1 * relaxed_solution.fun if self.isMaximization else relaxed_solution.fun
 
-        print("Design Variables: ", design_variables)
+        # print("Design Variables: ", design_variables)
         # print("Function Value: ",function_value )
 
         # Check if we can stop, by seeing if all the values are integers 
@@ -70,7 +70,7 @@ class SolveILP(object):
         else:
             # Determine which design variable to branch off of
             branching_variable, idx = self.find_branching_variable(design_variables)
-            print("branching variable: ", branching_variable)
+            # print("branching variable: ", branching_variable)
             # Branch the variable into two new constraints
 
             # left branch: value rounded down
@@ -78,8 +78,8 @@ class SolveILP(object):
             # right branch: value rounded up
             right_branch = math.ceil(branching_variable)
 
-            print("left branch. must be less than: ", left_branch)
-            print("right_branch. must be greather than: ",right_branch)
+            # print("left branch. must be less than: ", left_branch)
+            # print("right_branch. must be greather than: ",right_branch)
             # Set up a new constraint array, applying the constraint only the design variable of index
             new_constraint_array = [0]*len(design_variables)
             new_constraint_array[idx] = 1
@@ -105,15 +105,15 @@ class SolveILP(object):
             left_ub = self.get_upper_bound(left_val,left_optimization.x) if left_optimization.success else None
             right_ub = self.get_upper_bound(right_val,right_optimization.x) if right_optimization.success else None
 
-            print("left upper bound: ", left_ub)
-            print("right upper bound: ", right_ub)
+            # print("left upper bound: ", left_ub)
+            # print("right upper bound: ", right_ub)
 
             # the recursive act of branching left or right
             def move_left():
-                print("Moving Left")
+                # print("Moving Left")
                 self.solve_ILP(left_constraints, left_constraints_coeffs)
             def move_right():
-                print("Moving Right")
+                # print("Moving Right")
                 self.solve_ILP(right_constraints,right_constraints_coeffs)
 
 
@@ -134,29 +134,3 @@ class SolveILP(object):
             else:
                 self.result = {"x":None, "f": None}
                 return
-
-
-# This is the machine shop example from http://web.tecnico.ulisboa.pt/mcasquilho/compute/_linpro/TaylorB_module_c.pdf
-# Maximize Z = 100*(x_1) + 150(x_2)
-# Subject to:
-# 8000*(x_1) + 4000*(x_2) <= 40,000
-#  15*(x_1) + 30*(x_2) <= 200
-# x1,x2 >= zero 
-
-# Coefficients for Z (objective function equation)
-c = [100, 150]
-
-# Coeffecients of the Constraints 
-# 2D Array => each entry is a constraint, each element within the entry are the coefficients for the design variable within the constraint
-A = [[8000, 4000], [15, 30]]
-
-# The other side of the inequalitiy (must be in less than or equal to format) for each constraint
-b = [40000, 200]
-
-# The range of values, None representing infinity 
-bounds = [(0,None),(0,None)]
-
-soln = SolveILP(c,A,b, bounds)
-print(soln.result)
-
-
